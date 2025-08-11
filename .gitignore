@@ -1,0 +1,15 @@
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Temporary files
+temp_bria_results/
+
+# Streamlit temporary files
+.streamlit/
