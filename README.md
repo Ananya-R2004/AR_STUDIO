@@ -35,7 +35,7 @@ AR_STUDIO/
 ├── requirements.txt    # Python dependencies
 ├── README.md           # Project documentation
 └── .gitignore          # Ignored files
-
+```
 ---
 
 ## 🛠️ Installation Guide
@@ -43,9 +43,7 @@ AR_STUDIO/
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/Ananya-R2004/Dragon_Real_Estate_Model.git
-cd Dragon-Real-Estate-Dashboard
-
+git clone https://github.com/Ananya-R2004/AR_STUDIO.git
 ```
 
 ### 2️⃣ Create a Virtual Environment
