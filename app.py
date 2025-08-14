@@ -23,6 +23,8 @@ except Exception:
 
 # --- Compatibility shim for streamlit_drawable_canvas ---
 # Put this BEFORE `from streamlit_drawable_canvas import st_canvas`
+import types
+
 def _image_to_data_url(pil_image, format="PNG", width=None, clamp=False, channels="RGB", output_format="auto"):
     import io, base64
     if pil_image is None:
@@ -40,7 +42,7 @@ except Exception:
     if _st_image_mod:
         _st_image_mod = getattr(_st_image_mod, "image", None)
 
-if _st_image_mod and isinstance(_st_image_mod, type(__import__('types')).ModuleType):
+if _st_image_mod and isinstance(_st_image_mod, types.ModuleType):
     setattr(_st_image_mod, "image_to_url", _image_to_data_url)
 # --- End of Compatibility Shim ---
 
