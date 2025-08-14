@@ -2,7 +2,6 @@
 venv/
 
 # Environment variables
-.env
 
 # Python bytecode
 __pycache__/
