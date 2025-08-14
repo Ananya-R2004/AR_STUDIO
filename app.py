@@ -29,6 +29,8 @@ def _image_to_data_url(pil_image, format="PNG", width=None, clamp=False, channel
     import io, base64
     if pil_image is None:
         return None
+    if not format:
+        format = "PNG"
     buf = io.BytesIO()
     pil_image.save(buf, format=format)
     b64 = base64.b64encode(buf.getvalue()).decode("ascii")
@@ -1201,4 +1203,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
