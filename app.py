@@ -27,31 +27,36 @@ import types
 
 def _image_to_data_url(pil_image):
     """
-    Convert a PIL Image or path/URL to a data URL (PNG).
-    Used by streamlit_drawable_canvas which expects streamlit.elements.image.image_to_url.
+    Convert a PIL Image, NumPy array, or path/URL to a data URL.
+    Used by streamlit_drawable_canvas which expects image_to_url().
     """
+    import io, base64
+    from PIL import Image
+    import numpy as np
+
     if pil_image is None:
         return None
 
-    # If it's already a string path or URL, just return it unchanged
+    # String path or URL → return unchanged
     if isinstance(pil_image, str):
         return pil_image
 
-    # If it's a PIL Image, convert to data URL
-    try:
-        from PIL import Image
-        if isinstance(pil_image, Image.Image):
-            import io, base64
-            buf = io.BytesIO()
-            pil_image.save(buf, format="PNG")
-            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-            return f"data:image/png;base64,{b64}"
-    except ImportError:
-        pass
+    # NumPy array → convert to PIL Image
+    if isinstance(pil_image, np.ndarray):
+        try:
+            pil_image = Image.fromarray(pil_image.astype('uint8'))
+        except Exception:
+            return None
 
-    # Fallback: just return the object as-is
-    return pil_image
+    # PIL.Image → convert to base64 PNG
+    if isinstance(pil_image, Image.Image):
+        buf = io.BytesIO()
+        pil_image.save(buf, format="PNG")
+        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+        return f"data:image/png;base64,{b64}"
 
+    # Anything else (like int) → skip
+    return None
 from streamlit_drawable_canvas import st_canvas
 
 # --- Your other imports ---
