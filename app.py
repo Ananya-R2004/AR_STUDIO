@@ -25,28 +25,32 @@ except Exception:
 # Put this BEFORE `from streamlit_drawable_canvas import st_canvas`
 import types
 
-def _image_to_data_url(pil_image, format="PNG", width=None, clamp=False, channels="RGB", output_format="auto"):
-    import io, base64
+def _image_to_data_url(pil_image):
+    """
+    Convert a PIL Image or path/URL to a data URL (PNG).
+    Used by streamlit_drawable_canvas which expects streamlit.elements.image.image_to_url.
+    """
     if pil_image is None:
         return None
-    if not format:
-        format = "PNG"
-    buf = io.BytesIO()
-    pil_image.save(buf, format=format)
-    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-    return f"data:image/{format.lower()};base64,{b64}"
 
-try:
-    import streamlit.elements.image as _st_image_mod
-except Exception:
-    import streamlit as _st
-    _st_image_mod = getattr(_st, "elements", None)
-    if _st_image_mod:
-        _st_image_mod = getattr(_st_image_mod, "image", None)
+    # If it's already a string path or URL, just return it unchanged
+    if isinstance(pil_image, str):
+        return pil_image
 
-if _st_image_mod and isinstance(_st_image_mod, types.ModuleType):
-    setattr(_st_image_mod, "image_to_url", _image_to_data_url)
-# --- End of Compatibility Shim ---
+    # If it's a PIL Image, convert to data URL
+    try:
+        from PIL import Image
+        if isinstance(pil_image, Image.Image):
+            import io, base64
+            buf = io.BytesIO()
+            pil_image.save(buf, format="PNG")
+            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+            return f"data:image/png;base64,{b64}"
+    except ImportError:
+        pass
+
+    # Fallback: just return the object as-is
+    return pil_image
 
 from streamlit_drawable_canvas import st_canvas
 
@@ -239,7 +243,7 @@ def main():
     
     with st.sidebar:
         
-        st.image("logo.png", use_container_width=False, width=120) # Slightly reduced width for more space
+        st.image("logo.png", use_column_width =False, width=120) # Slightly reduced width for more space
 
         # Stylish Brand Header
         st.markdown(
