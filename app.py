@@ -1,5 +1,42 @@
-import streamlit as st
 import os
+from dotenv import load_dotenv
+import streamlit as st
+
+# --- Compatibility shim for streamlit_drawable_canvas ---
+# Put this BEFORE `from streamlit_drawable_canvas import st_canvas`
+import io
+import base64
+import types
+
+# Try to import the Streamlit image module path and add image_to_url if missing
+try:
+    import streamlit.elements.image as _st_image_mod
+except Exception:
+    # If the internal path isn't available, try alternative import path for older/newer Streamlit
+    import streamlit as _st
+    _st_image_mod = getattr(_st, "elements", None)
+    if _st_image_mod:
+        _st_image_mod = getattr(_st_image_mod, "image", None)
+
+def _image_to_data_url(pil_image):
+    """
+    Convert a PIL Image to a data URL (PNG). Used by streamlit_drawable_canvas
+    which expects streamlit.elements.image.image_to_url.
+    """
+    if pil_image is None:
+        return None
+    buf = io.BytesIO()
+    pil_image.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{b64}"
+
+# If the module exists and doesn't have image_to_url, attach it.
+if isinstance(_st_image_mod, types.ModuleType):
+    if not hasattr(_st_image_mod, "image_to_url"):
+        setattr(_st_image_mod, "image_to_url", _image_to_data_url)
+# --- End of Compatibility Shim ---
+
+from streamlit_drawable_canvas import st_canvas
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from services import (
@@ -12,7 +49,6 @@ import requests
 import json
 import time
 import base64
-from streamlit_drawable_canvas import st_canvas
 import numpy as np
 from services.product_cutout import product_cutout  
 from services.image_features import generate_background, remove_image_background, blur_background
@@ -199,7 +235,7 @@ def main():
     
     with st.sidebar:
         
-        st.image("logo.png", use_column_width=False, width=120) # Slightly reduced width for more space
+        st.image("logo.png", use_container_width=False, width=120) # Slightly reduced width for more space
 
         # Stylish Brand Header
         st.markdown(
