@@ -1,0 +1,8 @@
+toml
+<code>
+theme.base = "dark"
+theme.primaryColor = "#757575"
+theme.secondaryBackgroundColor = "#262730"
+theme.textColor = "#FAFAFA"
+theme.font = "sans serif"
+</code>
