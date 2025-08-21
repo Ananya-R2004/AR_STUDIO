@@ -333,33 +333,34 @@ def main():
 ])
     
     # --- CHATBOT INTEGRATION CODE ---
+    # We set the height to a minimal value so the Streamlit container is not visible.
+      # The chatbot itself, with its fixed position, will still appear as a floating popup.
     components.html("""
     <style>
-      /* Container to fix chatbot popup position and size */
-      #chatbot-container {
-        position: fixed;
-        bottom: 20px;  /* distance from bottom */
-        right: 20px;   /* distance from right */
-        width: 360px;  /* width like a smartphone */
-        height: 640px; /* height like a smartphone */
-        z-index: 9999; /* on top */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        border-radius: 15px;
-        overflow: hidden;
-      }
-      zapier-interfaces-chatbot-embed {
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 15px;
-      }
+        #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 360px;
+            height: 640px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        zapier-interfaces-chatbot-embed {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 15px;
+        }
     </style>
-
     <script async type='module' src='https://interfaces.zapier.com/assets/web-components/zapier-interfaces/zapier-interfaces.esm.js'></script>
-    
     <div id="chatbot-container">
-      <zapier-interfaces-chatbot-embed is-popup='true' chatbot-id='cme1qin6w001cbxros7z6roau'></zapier-interfaces-chatbot-embed>
+        <zapier-interfaces-chatbot-embed is-popup='true' chatbot-id='cme1qin6w001cbxros7z6roau'></zapier-interfaces-chatbot-embed>
     </div>
-""", height=700)
+""", height=1, scrolling=False) # Change height to 1 and disable scrolling.
+# --- END CHATBOT CODE ---
+
 
     # Generate Images Tab
     with tabs[0]:
