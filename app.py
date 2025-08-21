@@ -14,23 +14,25 @@ from dotenv import load_dotenv
 # --- CORRECTED Compatibility Shim for streamlit_drawable_canvas ---
 # This must be BEFORE `from streamlit_drawable_canvas import st_canvas`
 
-def _image_to_data_url(pil_image):
+def _image_to_data_url(pil_image, *args, **kwargs):
     """
     Convert a PIL Image to a data URL for streamlit_drawable_canvas.
     """
+    import io
+    import base64
+    from PIL import Image
+
     if not isinstance(pil_image, Image.Image):
-        # Handle cases where the input is not a PIL Image (e.g., None, int, etc.)
         return None
 
     buf = io.BytesIO()
-    # The format should be "PNG" for transparency
     pil_image.save(buf, format="PNG")
     b64 = base64.b64encode(buf.getvalue()).decode("ascii")
     return f"data:image/png;base64,{b64}"
 
 try:
+    import types
     import streamlit.elements.image as _st_image_mod
-    # The patch needs to be applied to the 'image' module within 'streamlit.elements'
     if hasattr(_st_image_mod, "image"):
         _st_image_mod = _st_image_mod.image
     if _st_image_mod and isinstance(_st_image_mod, types.ModuleType):
