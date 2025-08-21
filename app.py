@@ -11,52 +11,35 @@ import streamlit as st
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
 
-# --- Compatibility shim for streamlit_drawable_canvas ---
-# Put this BEFORE `from streamlit_drawable_canvas import st_canvas`
-try:
-    import streamlit.elements.image as _st_image_mod
-except Exception:
-    import streamlit as _st
-    _st_image_mod = getattr(_st, "elements", None)
-    if _st_image_mod:
-        _st_image_mod = getattr(_st_image_mod, "image", None)
-
-# --- Compatibility shim for streamlit_drawable_canvas ---
-# Put this BEFORE `from streamlit_drawable_canvas import st_canvas`
-import types
+# --- CORRECTED Compatibility Shim for streamlit_drawable_canvas ---
+# This must be BEFORE `from streamlit_drawable_canvas import st_canvas`
 
 def _image_to_data_url(pil_image):
     """
-    Convert a PIL Image, NumPy array, or path/URL to a data URL.
-    Used by streamlit_drawable_canvas which expects image_to_url().
+    Convert a PIL Image to a data URL for streamlit_drawable_canvas.
     """
-    import io, base64
-    from PIL import Image
-    import numpy as np
-
-    if pil_image is None:
+    if not isinstance(pil_image, Image.Image):
+        # Handle cases where the input is not a PIL Image (e.g., None, int, etc.)
         return None
 
-    # String path or URL → return unchanged
-    if isinstance(pil_image, str):
-        return pil_image
+    buf = io.BytesIO()
+    # The format should be "PNG" for transparency
+    pil_image.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{b64}"
 
-    # NumPy array → convert to PIL Image
-    if isinstance(pil_image, np.ndarray):
-        try:
-            pil_image = Image.fromarray(pil_image.astype('uint8'))
-        except Exception:
-            return None
+try:
+    import streamlit.elements.image as _st_image_mod
+    # The patch needs to be applied to the 'image' module within 'streamlit.elements'
+    if hasattr(_st_image_mod, "image"):
+        _st_image_mod = _st_image_mod.image
+    if _st_image_mod and isinstance(_st_image_mod, types.ModuleType):
+        setattr(_st_image_mod, "image_to_url", _image_to_data_url)
+except (ImportError, AttributeError):
+    pass
+# --- End of Corrected Compatibility Shim ---
 
-    # PIL.Image → convert to base64 PNG
-    if isinstance(pil_image, Image.Image):
-        buf = io.BytesIO()
-        pil_image.save(buf, format="PNG")
-        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-        return f"data:image/png;base64,{b64}"
 
-    # Anything else (like int) → skip
-    return None
 from streamlit_drawable_canvas import st_canvas
 
 # --- Your other imports ---
@@ -248,7 +231,7 @@ def main():
     
     with st.sidebar:
         
-        st.image("logo.png", use_column_width =False, width=120) # Slightly reduced width for more space
+        st.image("logo.png", use_container_width=True , width=120) # Slightly reduced width for more space
 
         # Stylish Brand Header
         st.markdown(
@@ -478,7 +461,7 @@ def main():
                                 if bria_temp_url:
                                     local_path = download_and_save_temp_image(bria_temp_url, prefix=f"generated_img_{i}_")
                                     if local_path:
-                                        st.image(local_path, caption=f"Generated Image {i+1}", use_column_width=True)
+                                        st.image(local_path, caption=f"Generated Image {i+1}", use_container_width=True)
                                     else:
                                         st.warning(f"❌ Failed to download generated image {i+1} from URL: {bria_temp_url}.")
                                 else:
@@ -505,7 +488,7 @@ def main():
         product_image_bytes = None
         if uploaded_product_file:
             product_image_bytes = uploaded_product_file.getvalue()
-            st.image(uploaded_product_file, caption="Uploaded Product Image", use_column_width=True)
+            st.image(uploaded_product_file, caption="Uploaded Product Image", use_container_width=True)
 
         # Common SKU input
         sku_input = st.text_input("SKU (Optional)", help="Stock Keeping Unit identifier for the product.")
@@ -539,7 +522,7 @@ def main():
                             st.error("Failed to generate packshot. Unexpected API response.")
 
             if st.session_state.packshot_image:
-                st.image(st.session_state.packshot_image, caption="Generated Packshot", use_column_width=True)
+                st.image(st.session_state.packshot_image, caption="Generated Packshot", use_container_width=True)
                 packshot_data = download_image(st.session_state.packshot_image)
                 if packshot_data:
                     st.download_button(
@@ -611,7 +594,7 @@ def main():
                             st.error("Failed to add shadow. Unexpected API response.")
 
             if st.session_state.shadow_image:
-                st.image(st.session_state.shadow_image, caption="Image with Shadow", use_column_width=True)
+                st.image(st.session_state.shadow_image, caption="Image with Shadow", use_container_width=True)
                 shadow_data = download_image(st.session_state.shadow_image)
                 if shadow_data:
                     st.download_button(
@@ -762,7 +745,7 @@ def main():
             if st.session_state.lifestyle_images:
                 st.subheader("Generated Lifestyle Shots")
                 for i, img_url in enumerate(st.session_state.lifestyle_images):
-                    st.image(img_url, caption=f"Lifestyle Shot {i+1}", use_column_width=True)
+                    st.image(img_url, caption=f"Lifestyle Shot {i+1}", use_container_width=True)
                     lifestyle_data = download_image(img_url)
                     if lifestyle_data:
                         st.download_button(
@@ -799,7 +782,7 @@ def main():
 
         with col1:
             # Display original image
-            st.image(uploaded_file, caption="Original Image", use_column_width=True)
+            st.image(uploaded_file, caption="Original Image", use_container_width=True)
 
             # Get image dimensions for canvas
             img = Image.open(uploaded_file)
@@ -932,7 +915,7 @@ def main():
         with col2:
             # Display the primary generated image if available
             if st.session_state.edited_image:
-                st.image(st.session_state.edited_image, caption="Generated Result", use_column_width=True)
+                st.image(st.session_state.edited_image, caption="Generated Result", use_container_width=True)
                 image_data = download_image(st.session_state.edited_image)
                 if image_data:
                     st.download_button(
@@ -945,7 +928,7 @@ def main():
             elif st.session_state.generated_images:
                 st.subheader("Generated Variations")
                 for i, img_url in enumerate(st.session_state.generated_images):
-                    st.image(img_url, caption=f"Variation {i+1}", use_column_width=True)
+                    st.image(img_url, caption=f"Variation {i+1}", use_container_width=True)
                     
                     # **INTEGRATION POINT FOR `download_save_temp_image`**
                     # Download and save the image locally
@@ -979,7 +962,7 @@ def main():
                  result_url = product_cutout(image_url=image_url, sku=sku)
                  if result_url:
                     st.success("✅ Product cutout successful!")
-                    st.image(result_url, caption="Cutout Result", use_column_width=True)
+                    st.image(result_url, caption="Cutout Result", use_container_width=True)
                  else:
                     st.error("❌ Failed to process the image.")
        else:
@@ -1024,7 +1007,7 @@ def main():
                                 local_image_path = download_and_save_temp_image(bria_temp_url, prefix="gen_bg_")
                                 if local_image_path:
                                     st.success("✅ Background generated successfully!")
-                                    st.image(local_image_path, caption=f"Generated Background: '{bg_prompt}'", use_column_width=True)
+                                    st.image(local_image_path, caption=f"Generated Background: '{bg_prompt}'", use_container_width=True)
                                 else:
                                     st.error("❌ Failed to download the generated image.")
                             else:
@@ -1052,7 +1035,7 @@ def main():
                                 local_image_path = download_and_save_temp_image(bria_temp_url, prefix="removed_bg_")
                                 if local_image_path:
                                     st.success("✅ Background removed successfully!")
-                                    st.image(local_image_path, caption="Background Removed", use_column_width=True)
+                                    st.image(local_image_path, caption="Background Removed", use_container_width=True)
                                 else:
                                     st.error("❌ Failed to download the processed image.")
                             else:
@@ -1082,7 +1065,7 @@ def main():
                                 local_image_path = download_and_save_temp_image(bria_temp_url, prefix="blurred_bg_")
                                 if local_image_path:
                                     st.success("✅ Background blurred successfully!")
-                                    st.image(local_image_path, caption="Background Blurred", use_column_width=True)
+                                    st.image(local_image_path, caption="Background Blurred", use_container_width=True)
                                 else:
                                     st.error("❌ Failed to download the processed image.")
                             else:
@@ -1119,7 +1102,7 @@ def main():
                             local_path = download_and_save_temp_image(bria_temp_url, prefix="erased_fg_")
                             if local_path:
                                 st.success("✅ Foreground erased successfully!")
-                                st.image(local_path, caption="Foreground Erased", use_column_width=True)
+                                st.image(local_path, caption="Foreground Erased", use_container_width=True)
                             else:
                                 st.error("❌ Failed to download the processed image.")
                         else:
@@ -1200,7 +1183,7 @@ def main():
                             local_path = download_and_save_temp_image(bria_temp_url, prefix="expanded_")
                             if local_path:
                                 st.success("✅ Image expanded successfully!")
-                                st.image(local_path, caption="Expanded Image", use_column_width=True)
+                                st.image(local_path, caption="Expanded Image", use_container_width=True)
                             else:
                                 st.error("❌ Failed to download the expanded image.")
                         else:
