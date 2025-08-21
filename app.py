@@ -331,21 +331,10 @@ def main():
 ])
     
     # --- CHATBOT INTEGRATION CODE ---
+
     components.html("""
-    <style>
-        /* This CSS targets the Streamlit tab header and hides the border and background */
-        div[data-testid="stVerticalTabs"] > div[role="tablist"] {
-            display: none !important;
-        }
-
-        /* This CSS targets the tab content container and makes it invisible */
-        div[data-testid="stVerticalTabs"] > div[data-testid="stVerticalTabsContent"] {
-            background-color: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-
-        /* Container to fix chatbot popup position and size */
+        <style>
+        /* Container for the floating chatbot popup */
         #chatbot-container {
             position: fixed;
             bottom: 20px;
