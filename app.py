@@ -14,25 +14,23 @@ from dotenv import load_dotenv
 # --- CORRECTED Compatibility Shim for streamlit_drawable_canvas ---
 # This must be BEFORE `from streamlit_drawable_canvas import st_canvas`
 
-def _image_to_data_url(pil_image, *args, **kwargs):
+def _image_to_data_url(pil_image):
     """
     Convert a PIL Image to a data URL for streamlit_drawable_canvas.
     """
-    import io
-    import base64
-    from PIL import Image
-
     if not isinstance(pil_image, Image.Image):
+        # Handle cases where the input is not a PIL Image (e.g., None, int, etc.)
         return None
 
     buf = io.BytesIO()
+    # The format should be "PNG" for transparency
     pil_image.save(buf, format="PNG")
     b64 = base64.b64encode(buf.getvalue()).decode("ascii")
     return f"data:image/png;base64,{b64}"
 
 try:
-    import types
     import streamlit.elements.image as _st_image_mod
+    # The patch needs to be applied to the 'image' module within 'streamlit.elements'
     if hasattr(_st_image_mod, "image"):
         _st_image_mod = _st_image_mod.image
     if _st_image_mod and isinstance(_st_image_mod, types.ModuleType):
@@ -333,34 +331,33 @@ def main():
 ])
     
     # --- CHATBOT INTEGRATION CODE ---
-    # We set the height to a minimal value so the Streamlit container is not visible.
-      # The chatbot itself, with its fixed position, will still appear as a floating popup.
     components.html("""
     <style>
-        #chatbot-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 360px;
-            height: 640px;
-            z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-        zapier-interfaces-chatbot-embed {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 15px;
-        }
+      /* Container to fix chatbot popup position and size */
+      #chatbot-container {
+        position: fixed;
+        bottom: 20px;  /* distance from bottom */
+        right: 20px;   /* distance from right */
+        width: 360px;  /* width like a smartphone */
+        height: 640px; /* height like a smartphone */
+        z-index: 9999; /* on top */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 15px;
+        overflow: hidden;
+      }
+      zapier-interfaces-chatbot-embed {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 15px;
+      }
     </style>
-    <script async type='module' src='https://interfaces.zapier.com/assets/web-components/zapier-interfaces/zapier-interfaces.esm.js'></script>
-    <div id="chatbot-container">
-        <zapier-interfaces-chatbot-embed is-popup='true' chatbot-id='cme1qin6w001cbxros7z6roau'></zapier-interfaces-chatbot-embed>
-    </div>
-""", height=1, scrolling=False) # Change height to 1 and disable scrolling.
-# --- END CHATBOT CODE ---
 
+    <script async type='module' src='https://interfaces.zapier.com/assets/web-components/zapier-interfaces/zapier-interfaces.esm.js'></script>
+    
+    <div id="chatbot-container">
+      <zapier-interfaces-chatbot-embed is-popup='true' chatbot-id='cme1qin6w001cbxros7z6roau'></zapier-interfaces-chatbot-embed>
+    </div>
+""", height=700)
 
     # Generate Images Tab
     with tabs[0]:
@@ -368,29 +365,36 @@ def main():
         
         col1, col2 = st.columns([2, 1])
         with col1:
-            prompt = st.text_area("Enter your prompt",
-                                value=st.session_state.original_prompt,
-                                height=100,
-                                key="prompt_input")
+            # Prompt input
+            prompt = st.text_area("Enter your prompt", 
+                                  value=st.session_state.original_prompt, # Use session state for persistence
+                                  height=100,
+                                  key="prompt_input")
             
+            # Update original_prompt in session state when it changes
             if prompt != st.session_state.original_prompt:
                 st.session_state.original_prompt = prompt
-                st.session_state.enhanced_prompt = None
+                st.session_state.enhanced_prompt = None  # Reset enhanced prompt when original changes
             
+            # Enhanced prompt display
             if st.session_state.get('enhanced_prompt'):
                 st.markdown("**Enhanced Prompt:**")
                 st.markdown(f"*{st.session_state.enhanced_prompt}*")
             
+            # Enhance Prompt button
             if st.button("✨ Enhance Prompt", key="enhance_button"):
                 if not prompt:
                     st.warning("Please enter a prompt to enhance.")
                 else:
                     with st.spinner("Enhancing prompt..."):
                         try:
-                            result_prompt = enhance_prompt(st.session_state.api_key, prompt)
-                            if result_prompt:
+                            # Assuming enhance_prompt now takes API key if needed, or uses a global one
+                            # Changed based on your last code which passed st.session_state.api_key
+                            result_prompt = enhance_prompt(st.session_state.api_key, prompt) 
+                            if result_prompt: # Check if result_prompt is not empty/None
                                 st.session_state.enhanced_prompt = result_prompt
                                 st.success("Prompt enhanced!")
+                                st.experimental_rerun()  # Rerun to update the display
                             else:
                                 st.error("No enhanced prompt returned from the API.")
                         except Exception as e:
@@ -401,73 +405,76 @@ def main():
             aspect_ratio = st.selectbox("Aspect ratio", ["1:1", "16:9", "9:16", "4:3", "3:4"])
             enhance_img = st.checkbox("Enhance image quality", value=True)
             
+            # Style options
             st.subheader("Style Options")
             style = st.selectbox("Image Style", [
-                "Realistic", "Artistic", "Cartoon", "Sketch",
+                "Realistic", "Artistic", "Cartoon", "Sketch", 
                 "Watercolor", "Oil Painting", "Digital Art"
             ])
             
+        # Generate button
         if st.button("🎨 Generate Images", type="primary"):
             if not st.session_state.api_key:
                 st.error("Please set your API key in the sidebar.")
-            else:
-                current_prompt_to_use = st.session_state.enhanced_prompt if st.session_state.get('enhanced_prompt') else prompt
-                if not current_prompt_to_use:
-                    st.warning("Please enter a prompt or enhance it first.")
-                else:
-                    final_prompt_with_style = current_prompt_to_use
-                    if style and style != "Realistic":
-                        final_prompt_with_style = f"{current_prompt_to_use}, in {style.lower()} style"
-                        
-                    with st.spinner("🎨 Generating your masterpiece..."):
-                        try:
-                            results_dict = generate_hd_image(
-                                prompt=final_prompt_with_style,
-                                api_key=st.session_state.api_key,
-                                num_results=num_images,
-                                aspect_ratio=aspect_ratio,
-                                sync=True,
-                                enhance_image=enhance_img,
-                                medium="art" if style != "Realistic" else "photography",
-                                prompt_enhancement=False,
-                                content_moderation=True
-                            )
-                            
-                            if results_dict and isinstance(results_dict, dict) and "result" in results_dict:
-                                image_urls_to_display = []
-                                for item in results_dict["result"]:
-                                    if isinstance(item, dict) and "urls" in item and isinstance(item["urls"], list):
-                                        image_urls_to_display.extend(item["urls"])
-                                    elif isinstance(item, str) and item.startswith("http"):
-                                        image_urls_to_display.append(item)
+                return
+            
+            current_prompt_to_use = st.session_state.enhanced_prompt if st.session_state.get('enhanced_prompt') else prompt
+            if not current_prompt_to_use:
+                st.warning("Please enter a prompt or enhance it first.")
+                return
 
-                                if image_urls_to_display:
-                                    st.success(f"✨ Image(s) generated successfully! Displaying {len(image_urls_to_display)} result(s).")
-                                    for i, bria_temp_url in enumerate(image_urls_to_display):
-                                        if bria_temp_url:
-                                            local_path = download_and_save_temp_image(bria_temp_url, prefix=f"generated_img_{i}_")
-                                            if local_path:
-                                                st.image(local_path, caption=f"Generated Image {i+1}", use_container_width=True)
-                                                with open(local_path, "rb") as file:
-                                                    st.download_button(
-                                                        label=f"Download Image {i+1}",
-                                                        data=file,
-                                                        file_name=os.path.basename(local_path),
-                                                        mime="image/png"
-                                                    )
-                                            else:
-                                                st.warning(f"❌ Failed to download generated image {i+1} from URL: {bria_temp_url}.")
-                                        else:
-                                            st.warning(f"❌ Bria.ai returned an empty URL for generated image {i+1}.")
+            # Add style to prompt if not Realistic
+            final_prompt_with_style = current_prompt_to_use
+            if style and style != "Realistic":
+                final_prompt_with_style = f"{current_prompt_to_use}, in {style.lower()} style"
+                
+            with st.spinner("🎨 Generating your masterpiece..."):
+                try:
+                    # Pass API key to generate_hd_image
+                    results_dict = generate_hd_image( # Renamed variable to reflect it's a dict
+                        prompt=final_prompt_with_style,
+                        api_key=st.session_state.api_key, # Explicitly pass API key
+                        num_results=num_images,
+                        aspect_ratio=aspect_ratio,
+                        sync=True, 
+                        enhance_image=enhance_img,
+                        medium="art" if style != "Realistic" else "photography",
+                        prompt_enhancement=False, # We're doing our own enhancement
+                        content_moderation=True
+                    )
+                    
+                    if results_dict and isinstance(results_dict, dict) and "result" in results_dict:
+                        st.write("Debug - Raw API Response (Generate Images):", results_dict) # Keep for debugging
+                        
+                        image_urls_to_display = []
+                        for item in results_dict["result"]:
+                            if isinstance(item, dict) and "urls" in item and isinstance(item["urls"], list):
+                                image_urls_to_display.extend(item["urls"])
+                            # Add other potential patterns if the API can return them
+                            elif isinstance(item, str) and item.startswith("http"): # If 'result' directly contains URLs
+                                image_urls_to_display.append(item)
+
+
+                        if image_urls_to_display:
+                            st.success(f"✨ Image(s) generated successfully! Displaying {len(image_urls_to_display)} result(s).")
+                            for i, bria_temp_url in enumerate(image_urls_to_display):
+                                if bria_temp_url:
+                                    local_path = download_and_save_temp_image(bria_temp_url, prefix=f"generated_img_{i}_")
+                                    if local_path:
+                                        st.image(local_path, caption=f"Generated Image {i+1}", use_container_width=True)
+                                    else:
+                                        st.warning(f"❌ Failed to download generated image {i+1} from URL: {bria_temp_url}.")
                                 else:
-                                    st.error("❌ No image URLs found in the API response after parsing.")
-                            else:
-                                st.error(f"❌ Unexpected response format from generate_hd_image. Expected a dictionary with 'result' key. Got: {type(results_dict)}")
-                                st.write("Raw response:", results_dict)
-                                
-                        except Exception as e:
-                            st.error(f"❌ Error generating images: {str(e)}")
-                            st.write("Full error:", str(e))
+                                    st.warning(f"❌ Bria.ai returned an empty URL for generated image {i+1}.")
+                        else:
+                            st.error("❌ No image URLs found in the API response after parsing.")
+                    else:
+                        st.error(f"❌ Unexpected response format from generate_hd_image. Expected a dictionary with 'result' key. Got: {type(results_dict)}")
+                        st.write("Raw response:", results_dict)
+                        
+                except Exception as e:
+                    st.error(f"❌ Error generating images: {str(e)}")
+                    st.write("Full error:", str(e))
 
     # Product Photography Tab
     with tabs[1]:

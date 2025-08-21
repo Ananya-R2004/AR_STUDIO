@@ -86,7 +86,7 @@ http://127.0.0.1:8050/
 
 ## 🖼️ Demo
 
-📄 **[Click here to view the Demo — Live App Preview](#)**  
+📄 **[Click here to view the Demo — Live App Preview](#https://ar-studio-ananya2112.streamlit.app/)**  
 
 ---
 
