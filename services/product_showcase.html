@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Product Showcase</title>
+    
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom font and smooth transitions */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light Blue/Gray Background */
+        }
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .modal-overlay {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <h1 class="text-3xl font-extrabold text-indigo-700">Digital Product Gallery</h1>
+            <p class="mt-1 text-sm text-gray-500">Showcasing dynamic front-end capabilities (HTML, CSS, JS).</p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+        <!-- Filter/Category Section -->
+        <div class="mb-8 p-5 bg-white rounded-xl shadow-md">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Filter Products</h2>
+            <div id="filter-buttons" class="flex flex-wrap gap-3">
+                <!-- Filter buttons rendered here -->
+            </div>
+        </div>
+
+        <!-- Product Grid Container -->
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- Product cards will be rendered here by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Product Detail Modal (Overlay) -->
+    <div id="product-modal-overlay" class="modal-overlay fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-80 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto transform transition-all p-6 relative">
+            
+            <!-- Modal Close Button -->
+            <button id="close-modal-btn" type="button" class="absolute top-4 right-4 text-gray-500 hover:text-gray-900 focus:outline-none transition">
+                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <!-- Modal Content -->
+            <div id="modal-content" class="pt-2">
+                <!-- Content will be injected by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Product Data ---
+        const PRODUCTS = [
+            { id: 1, name: "AI-Generated Portrait", category: "Digital Art", price: 79.99, description: "A high-resolution, photorealistic digital portrait created using our AR Studio technology. Perfect for unique profile pictures or printing.", imageUrl: "https://placehold.co/500x300/6366F1/ffffff?text=AI+Portrait" },
+            { id: 2, name: "E-Commerce Product Shot", category: "Product Photos", price: 39.00, description: "Clean, white-background image optimized for Amazon/Shopify listings. Generated with perfect lighting and shadows.", imageUrl: "https://placehold.co/500x300/10B981/ffffff?text=Product+Shot" },
+            { id: 3, name: "Fantasy Landscape Bundle", category: "Digital Art", price: 119.50, description: "A set of five expansive, high-detail fantasy landscapes, ideal for wall art or game assets.", imageUrl: "https://placehold.co/500x300/F97316/ffffff?text=Fantasy+Scene" },
+            { id: 4, name: "Generative Fill Masking Tool", category: "Tools", price: 199.00, description: "Lifetime license to the Generative Fill tool featured in the AR Studio for complex image edits.", imageUrl: "https://placehold.co/500x300/EF4444/ffffff?text=Editing+Tool" },
+            { id: 5, name: "Lifestyle Mockup", category: "Product Photos", price: 65.00, description: "Your product placed into a realistic lifestyle setting (e.g., a coffee shop, a beach).", imageUrl: "https://placehold.co/500x300/3B82F6/ffffff?text=Lifestyle+Mockup" },
+        ];
+
+        let currentCategory = 'All';
+
+        const DOMElements = {
+            grid: document.getElementById('product-grid'),
+            filters: document.getElementById('filter-buttons'),
+            modal: document.getElementById('product-modal-overlay'),
+            modalContent: document.getElementById('modal-content'),
+            closeBtn: document.getElementById('close-modal-btn')
+        };
+
+        // --- Core Functions ---
+
+        /**
+         * Renders the product cards based on the current filter.
+         */
+        function renderProducts() {
+            DOMElements.grid.innerHTML = '';
+            
+            const filteredProducts = PRODUCTS.filter(p => 
+                currentCategory === 'All' || p.category === currentCategory
+            );
+
+            if (filteredProducts.length === 0) {
+                DOMElements.grid.innerHTML = `<div class="col-span-full text-center p-10 text-gray-500 text-lg">No products found in the selected category.</div>`;
+                return;
+            }
+
+            filteredProducts.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card bg-white rounded-xl shadow-lg overflow-hidden';
+                card.innerHTML = `
+                    <div class="w-full h-56 bg-gray-100 overflow-hidden">
+                        <img src="${product.imageUrl}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/500x300/E5E7EB/6B7280?text=Image+Not+Found';" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm font-medium text-indigo-500 uppercase mb-1">${product.category}</p>
+                        <h3 class="text-xl font-bold text-gray-900 truncate">${product.name}</h3>
+                        <p class="text-3xl font-extrabold text-green-600 mt-2">$${product.price.toFixed(2)}</p>
+                        <button onclick="openModal(${product.id})" class="mt-4 w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200 shadow-md">View Details</button>
+                    </div>
+                `;
+                DOMElements.grid.appendChild(card);
+            });
+        }
+
+        /**
+         * Initializes filter buttons dynamically.
+         */
+        function initializeFilters() {
+            const categories = new Set(['All', ...PRODUCTS.map(p => p.category)]);
+            
+            categories.forEach(category => {
+                const button = document.createElement('button');
+                button.textContent = category;
+                button.setAttribute('data-category', category);
+
+                // Initial styling is done via setFilter for consistency
+                button.addEventListener('click', () => {
+                    setFilter(category);
+                });
+
+                DOMElements.filters.appendChild(button);
+            });
+            updateFilterStyles();
+        }
+
+        /**
+         * Updates the filter state and styling.
+         * @param {string} category The category to filter by.
+         */
+        function setFilter(category) {
+            currentCategory = category;
+            updateFilterStyles();
+            renderProducts();
+        }
+
+        /**
+         * Updates the Tailwind classes for the active filter button.
+         */
+        function updateFilterStyles() {
+            document.querySelectorAll('#filter-buttons button').forEach(button => {
+                if (button.getAttribute('data-category') === currentCategory) {
+                    button.className = 'px-4 py-2 text-sm font-bold rounded-full transition duration-150 bg-indigo-600 text-white shadow-lg transform scale-105';
+                } else {
+                    button.className = 'px-4 py-2 text-sm font-medium rounded-full transition duration-150 bg-gray-200 text-gray-700 hover:bg-gray-300';
+                }
+            });
+        }
+        
+        /**
+         * Opens the modal with the selected product's details.
+         * @param {number} id The product ID.
+         */
+        window.openModal = function(id) {
+            const product = PRODUCTS.find(p => p.id === id);
+
+            if (!product) return; 
+
+            // Inject dynamic content into the modal
+            DOMElements.modalContent.innerHTML = `
+                <div class="sm:flex">
+                    <div class="sm:flex-shrink-0">
+                        <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-52 sm:w-48 object-cover rounded-lg mb-4 sm:mb-0">
+                    </div>
+                    <div class="mt-3 sm:mt-0 sm:ml-6">
+                        <h2 class="text-3xl font-extrabold text-gray-900">${product.name}</h2>
+                        <p class="text-md font-semibold text-indigo-500 mb-2">${product.category}</p>
+                        <p class="text-4xl font-black text-green-700 mb-4">$${product.price.toFixed(2)}</p>
+                        <p class="text-gray-700 mb-6">${product.description}</p>
+                        
+                        <div class="flex flex-col gap-3">
+                            <button class="bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 shadow-lg">Add to Cart</button>
+                            <button class="bg-gray-100 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-200 transition">Contact for Custom Order</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            DOMElements.modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Lock background scroll
+        };
+
+        /**
+         * Closes the product detail modal.
+         */
+        function closeModal() {
+            DOMElements.modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore background scroll
+        }
+
+        // --- Event Listeners and Initialization ---
+
+        DOMElements.closeBtn.addEventListener('click', closeModal);
+        DOMElements.modal.addEventListener('click', (e) => {
+            // Close if the user clicks the dark backdrop, but not the content inside
+            if (e.target === DOMElements.modal) {
+                closeModal();
+            }
+        });
+
+        // Initialize the application on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFilters();
+            renderProducts();
+        });
+    </script>
+</body>
+</html>
