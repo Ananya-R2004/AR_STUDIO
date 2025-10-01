@@ -27,3 +27,4 @@ __all__ = [
     'add_product_shadow',
     'create_lifestyle_shot_by_text'
 ] 
+# services/__init__.py

@@ -37,7 +37,7 @@ def generative_fill(
         'Content-Type': 'application/json'
     }
     
-    # Convert image and mask to base64
+    # Convert image and mask to base64.
     image_base64 = base64.b64encode(image_data).decode('utf-8')
     mask_base64 = base64.b64encode(mask_data).decode('utf-8')
     

@@ -32,7 +32,7 @@ def create_packshot(
         'Content-Type': 'application/json'
     }
     
-    # Convert image data to base64
+    # Convert image data to base64.
     image_base64 = base64.b64encode(image_data).decode('utf-8')
     
     # Prepare request data

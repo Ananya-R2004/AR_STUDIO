@@ -1,4 +1,4 @@
-# services/image_expansion.py
+# services/image_expansion.py.
 
 import os
 import requests

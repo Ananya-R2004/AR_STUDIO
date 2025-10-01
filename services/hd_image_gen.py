@@ -42,7 +42,7 @@ def generate_hd_image(
     if not prompt:
         raise ValueError("Prompt is required for image generation")
     
-    # Build request data with only provided parameters
+    # Build request data with only provided parameters.
     data = {
         "prompt": prompt,
         "num_results": max(1, min(num_results, 4)),

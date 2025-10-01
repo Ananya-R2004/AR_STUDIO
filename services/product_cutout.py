@@ -2,7 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-# Load environment variables from .env
+# Load environment variables from .env..
 load_dotenv()
 
 API_TOKEN = os.getenv("BRIA_API_KEY")

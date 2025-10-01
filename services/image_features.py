@@ -5,7 +5,7 @@ import requests
 import json
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables.
 load_dotenv()
 BRIA_API_TOKEN = os.getenv("BRIA_API_KEY")
 

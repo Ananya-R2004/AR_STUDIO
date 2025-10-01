@@ -1,4 +1,4 @@
-# services/background_service.py
+# services/background_service.py.
 
 from typing import Dict, Any, Optional
 import requests

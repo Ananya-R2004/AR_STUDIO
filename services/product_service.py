@@ -2,7 +2,7 @@
 import requests
 import base64
 import io
-import os # Add os import if you're using it here
+import os # Add os import if you're using it here.
 
 BRIA_API_BASE_URL = "https://engine.prod.bria-api.com/v1"
 
