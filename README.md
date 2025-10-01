@@ -8,7 +8,7 @@
 
 ### Welcome to AR_STUDIO
 
-AR_STUDIO is a **Streamlit-powered interactive platform** for experimenting with **Augmented Reality (AR)** and **AI-enhanced visuals** directly from your browser. *With integrated CHATBOT 
+AR_STUDIO is a **Streamlit-powered interactive platform** for experimenting with **Augmented Reality (AR)** and **AI-enhanced visuals** directly from your browser. *With integrated CHATBOT.
 **Creative. Immersive. Real-Time.**
 
 This project allows users to load 3D models, apply transformations, and integrate AI-generated assets — all without leaving the app.
